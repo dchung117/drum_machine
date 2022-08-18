@@ -37,8 +37,28 @@ def draw_grid():
     # Create tile beats for each instrument (this is the grid)
     for i in range(beats):
         for j in range(instruments):
-            rect = pygame.draw.rect(surface=screen, color=gray, \
-                rect=pygame.Rect([i*(WIDTH - 200) // beats + 200, j*100, (WIDTH - 200) // beats, (HEIGHT - 200)//instruments]), width=3, border_radius=5)
+            # check if box is clicked
+            if clicked[j][i]:
+                click_color=green
+            else:
+                click_color=gray
+
+            # color the rectangle w/ clicked
+            rect = pygame.draw.rect(surface=screen, color=click_color, \
+                rect=pygame.Rect([i*(WIDTH - 200) // beats + 205, j*100 + 5, (WIDTH - 200) // beats - 10, (HEIGHT - 200)//instruments - 10]), width=0, border_radius=3)
+
+            # add gold frame
+            pygame.draw.rect(surface=screen, color=gold, \
+                rect=pygame.Rect([i*(WIDTH - 200) // beats + 200, j*100, (WIDTH - 200) // beats, (HEIGHT - 200)//instruments]), width=5, border_radius=5)
+
+            # rectangle outline
+            pygame.draw.rect(surface=screen, color=black, \
+                rect=pygame.Rect([i*(WIDTH - 200) // beats + 200, j*100, (WIDTH - 200) // beats, (HEIGHT - 200)//instruments]), width=2, border_radius=5)
+            # Store the rectangle object and the beat/instrument idx
+            boxes.append((rect, (i, j)))
+
+    return boxes
+
 # Set up app GUI
 WIDTH = 1400
 HEIGHT = 800
@@ -47,6 +67,8 @@ HEIGHT = 800
 black = (0, 0, 0)
 white = (255, 255, 255)
 gray = (128, 128, 128)
+green = (0, 255, 0)
+gold = (212, 175, 55)
 
 # Create screen
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
@@ -57,9 +79,12 @@ label_font = pygame.font.Font("freesansbold.ttf", 32)
 
 FRAME_RATE = 60 # fps
 timer =  pygame.time.Clock()
+
+# beat boxes
 beats = 8
 instruments = 6
-
+boxes = []
+clicked = [[False for _ in range(beats)] for _ in range(instruments)]
 if __name__ == "__main__":
     run = True
     while run:
@@ -70,7 +95,7 @@ if __name__ == "__main__":
         screen.fill(black)
 
         # Draw the grid
-        draw_grid()
+        boxes = draw_grid()
 
         # get events from the queue
         for event in pygame.event.get():
@@ -78,6 +103,16 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 run = False
 
+            # check if any beats are clicked
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                # Loop through each beat box
+                for i in range(len(boxes)):
+                    # Get box indices if it was clicked on
+                    if boxes[i][0].collidepoint(event.pos):
+                        coords = boxes[i][1]
+
+                        # Updated clicked list
+                        clicked[coords[1]][coords[0]] = not clicked[coords[1]][coords[0]]
         # Update changes to the display
         pygame.display.flip()
 
