@@ -4,7 +4,7 @@ from pygame import mixer
 # Initialize pygame module
 pygame.init()
 
-def draw_grid():
+def draw_grid(clicked, active_beat):
     # left menu for sound selection
     left_box = pygame.draw.rect(surface=screen, color=gray, rect=pygame.Rect([0, 0, 200, HEIGHT-200]), width=5)
 
@@ -57,6 +57,11 @@ def draw_grid():
             # Store the rectangle object and the beat/instrument idx
             boxes.append((rect, (i, j)))
 
+
+    # Draw current beat in loop
+    active = pygame.draw.rect(screen, blue, rect=[active_beat*(WIDTH - 200) // beats + 200, 0, (WIDTH - 200)//beats, instruments*100],
+        width=5, border_radius=3)
+
     return boxes
 
 # Set up app GUI
@@ -69,6 +74,7 @@ white = (255, 255, 255)
 gray = (128, 128, 128)
 green = (0, 255, 0)
 gold = (212, 175, 55)
+blue = (0, 255, 255)
 
 # Create screen
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
@@ -84,6 +90,14 @@ timer =  pygame.time.Clock()
 beats = 8
 instruments = 6
 boxes = []
+
+# beats per minute
+bpm = 240
+is_playing = True
+active_length = 0 # length of current beat
+active_beat = 0 # current beat (e.g. 1 to 8 inclusive)
+beat_changed = True # flag noting if beat changed
+
 clicked = [[False for _ in range(beats)] for _ in range(instruments)]
 if __name__ == "__main__":
     run = True
@@ -95,9 +109,9 @@ if __name__ == "__main__":
         screen.fill(black)
 
         # Draw the grid
-        boxes = draw_grid()
+        boxes = draw_grid(clicked, active_beat)
 
-        # get events from the queue
+        # get events from the queue (USER INPUTS)
         for event in pygame.event.get():
             # quit game - break out of loop
             if event.type == pygame.QUIT:
@@ -113,6 +127,24 @@ if __name__ == "__main__":
 
                         # Updated clicked list
                         clicked[coords[1]][coords[0]] = not clicked[coords[1]][coords[0]]
+
+        # BEAT TRACKING
+        # Create beat length (i.e. how long each beat should play for) (minutes)
+        beat_length = 3600 // bpm # 60 fps * 60 s/min = 3600 frames per min
+
+        if is_playing:
+            if active_length < beat_length: # add 1 to active_length
+                active_length += 1
+            else: # reset active length
+                active_length = 0
+                if active_beat < beats - 1:
+                    # change beat
+                    active_beat += 1
+                    beat_changed = True
+                else: # reset beat to first
+                    active_beat = 0
+                    beat_changed = True
+
         # Update changes to the display
         pygame.display.flip()
 
