@@ -1,3 +1,4 @@
+import os
 import pygame
 from pygame import mixer
 
@@ -64,6 +65,24 @@ def draw_grid(clicked, active_beat):
 
     return boxes
 
+def play_notes(clicked: list):
+    # loop through instruments
+    for i in range(len(clicked)):
+        # Check if the instrument is played on the active beat
+        if clicked[i][active_beat]:
+            sound_list[i].play() # play the sound
+
+# load in sounds
+sounds_path = "sounds"
+hi_hat = mixer.Sound(os.path.join(sounds_path, "hi hat.WAV"))
+snare = mixer.Sound(os.path.join(sounds_path, "snare.WAV"))
+kick = mixer.Sound(os.path.join(sounds_path, "kick.WAV"))
+crash = mixer.Sound(os.path.join(sounds_path, "crash.WAV"))
+clap = mixer.Sound(os.path.join(sounds_path, "clap.WAV"))
+tom = mixer.Sound(os.path.join(sounds_path, "tom.WAV"))
+sound_list = [hi_hat, snare, kick, crash, clap, tom]
+pygame.mixer.set_num_channels(len(sound_list)*3) # ensure sounds that need multi-channels aren't cut off
+
 # Set up app GUI
 WIDTH = 1400
 HEIGHT = 800
@@ -110,6 +129,10 @@ if __name__ == "__main__":
 
         # Draw the grid
         boxes = draw_grid(clicked, active_beat)
+
+        # play notes
+        if beat_changed:
+            play_notes(clicked)
 
         # get events from the queue (USER INPUTS)
         for event in pygame.event.get():
