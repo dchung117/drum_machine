@@ -137,6 +137,34 @@ if __name__ == "__main__":
         play_text = label_font.render("Play/Pause", True, white)
         screen.blit(play_text, [70, HEIGHT - 130])
 
+        # Add bpm controls
+        bpm_rect = pygame.draw.rect(screen, gray, rect=[300, HEIGHT - 150, 220, 100], width=5, border_radius=5)
+        bpm_text = medium_font.render("Beats Per Minute", True, white)
+        screen.blit(bpm_text, [308, HEIGHT - 130])
+        bpm_text_2 = label_font.render(f"{bpm}", True, white)
+        screen.blit(bpm_text_2, [370, HEIGHT - 100])
+
+        bpm_add = pygame.draw.rect(screen, gray, rect=[525, HEIGHT-150, 48, 48], width=0, border_radius=5)
+        bpm_sub = pygame.draw.rect(screen, gray, rect=[525, HEIGHT-100, 48, 48], width=0, border_radius=5)
+        bpm_add_text = medium_font.render("+5", True, white)
+        bpm_sub_text = medium_font.render("-5", True, white)
+        screen.blit(bpm_add_text, [530, HEIGHT-140])
+        screen.blit(bpm_sub_text, [530, HEIGHT-90])
+
+        # handle number of beats
+        beats_rect = pygame.draw.rect(screen, gray, rect=[600, HEIGHT - 150, 220, 100], width=5, border_radius=5)
+        beats_text = medium_font.render("Beats In Loop", True, white)
+        screen.blit(beats_text, [618, HEIGHT - 130])
+        beats_text_2 = label_font.render(f"{beats}", True, white)
+        screen.blit(beats_text_2, [680, HEIGHT - 100])
+
+        beats_add = pygame.draw.rect(screen, gray, rect=[825, HEIGHT-150, 48, 48], width=0, border_radius=5)
+        beats_sub = pygame.draw.rect(screen, gray, rect=[825, HEIGHT-100, 48, 48], width=0, border_radius=5)
+        beats_add_text = medium_font.render("+1", True, white)
+        beats_sub_text = medium_font.render("-1", True, white)
+        screen.blit(beats_add_text, [830, HEIGHT-140])
+        screen.blit(beats_sub_text, [830, HEIGHT-90])
+
         # modify text if playing
         if is_playing:
             play_text_2 = medium_font.render("Playing", True, dark_gray)
@@ -165,10 +193,22 @@ if __name__ == "__main__":
                         # Updated clicked list
                         clicked[coords[1]][coords[0]] = not clicked[coords[1]][coords[0]]
 
-            # check if play/pause was clicked - update it
+            # check if play/pause or bpm button was clicked - update it
             if event.type == pygame.MOUSEBUTTONUP:
                 if play_pause.collidepoint(event.pos):
                     is_playing = not is_playing
+                elif bpm_add.collidepoint(event.pos):
+                    bpm += 5
+                elif bpm_sub.collidepoint(event.pos):
+                    bpm = max(0, bpm - 5)
+                elif beats_add.collidepoint(event.pos):
+                    beats += 1
+                    for i in range(len(clicked)):
+                        clicked[i].append(False)
+                elif beats_sub.collidepoint(event.pos):
+                    beats = max(1, beats - 1)
+                    for i in range(len(clicked)):
+                        clicked[i].pop(-1) # remove last beat from table
 
         # BEAT TRACKING
         # Create beat length (i.e. how long each beat should play for) (minutes)
