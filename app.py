@@ -5,7 +5,9 @@ from pygame import mixer
 # Initialize pygame module
 pygame.init()
 
-def draw_grid(clicked, active_beat):
+def draw_grid(clicked: list,
+    active_beat: list,
+    active_list: list):
     # left menu for sound selection
     left_box = pygame.draw.rect(surface=screen, color=gray, rect=pygame.Rect([0, 0, 200, HEIGHT-200]), width=5)
 
@@ -14,21 +16,21 @@ def draw_grid(clicked, active_beat):
 
     # Make grid
     boxes = []
-    colors = [gray, white, white]
+    colors = [gray, white]
 
     # write hi-hat, snare, kick text, draw (blit) onto screen
     # todo: do we need to save these text objects? if not, let's move them into the "for i in range(instruments)..." loop
-    hi_hat_text = label_font.render("Hi Hat", True, white)
+    hi_hat_text = label_font.render("Hi Hat", True, colors[int(active_list[0])])
     screen.blit(hi_hat_text, (30, 30))
-    snare_text = label_font.render("Snare", True, white)
+    snare_text = label_font.render("Snare", True, colors[int(active_list[1])])
     screen.blit(snare_text, (30, 130))
-    kick_text = label_font.render("Kick", True, white)
+    kick_text = label_font.render("Kick", True, colors[int(active_list[2])])
     screen.blit(kick_text, (30, 230))
-    crash_text = label_font.render("Crash", True, white)
+    crash_text = label_font.render("Crash", True, colors[int(active_list[3])])
     screen.blit(crash_text, (30, 330))
-    clap_text = label_font.render("Clap", True, white)
+    clap_text = label_font.render("Clap", True, colors[int(active_list[4])])
     screen.blit(clap_text, (30, 430))
-    floor_tom_text = label_font.render("Floor Tom", True, white)
+    floor_tom_text = label_font.render("Floor Tom", True, colors[int(active_list[5])])
     screen.blit(floor_tom_text, (30, 530))
 
     # Draw lines between each instrument
@@ -40,7 +42,10 @@ def draw_grid(clicked, active_beat):
         for j in range(instruments):
             # check if box is clicked
             if clicked[j][i]:
-                click_color=green
+                if active_list[j]: # check if instrument is active
+                    click_color=green
+                else:
+                    click_color=dark_gray
             else:
                 click_color=gray
 
@@ -65,11 +70,12 @@ def draw_grid(clicked, active_beat):
 
     return boxes
 
-def play_notes(clicked: list):
+def play_notes(clicked: list,
+    active_list: list):
     # loop through instruments
     for i in range(len(clicked)):
-        # Check if the instrument is played on the active beat
-        if clicked[i][active_beat]:
+        # Check if the instrument is played on the active beat AND is active
+        if clicked[i][active_beat] and active_list[i]:
             sound_list[i].play() # play the sound
 
 # load in sounds
@@ -81,7 +87,7 @@ crash = mixer.Sound(os.path.join(sounds_path, "crash.WAV"))
 clap = mixer.Sound(os.path.join(sounds_path, "clap.WAV"))
 tom = mixer.Sound(os.path.join(sounds_path, "tom.WAV"))
 sound_list = [hi_hat, snare, kick, crash, clap, tom]
-pygame.mixer.set_num_channels(len(sound_list)*3) # ensure sounds that need multi-channels aren't cut off
+pygame.mixer.set_num_channels(len(sound_list)*18) # ensure sounds that need multi-channels aren't cut off
 
 # Set up app GUI
 WIDTH = 1400
@@ -119,6 +125,8 @@ active_length = 0 # length of current beat
 active_beat = 0 # current beat (e.g. 1 to 8 inclusive)
 beat_changed = True # flag noting if beat changed
 
+# active instruments
+active_list = [True for _ in range(instruments)]
 clicked = [[False for _ in range(beats)] for _ in range(instruments)]
 if __name__ == "__main__":
     run = True
@@ -130,7 +138,7 @@ if __name__ == "__main__":
         screen.fill(black)
 
         # Draw the grid
-        boxes = draw_grid(clicked, active_beat)
+        boxes = draw_grid(clicked, active_beat, active_list)
 
         # draw lower menu buttons (play/pause)
         play_pause = pygame.draw.rect(screen, gray, rect=[50, HEIGHT - 150, 200, 100], width=0, border_radius=5)
@@ -165,6 +173,12 @@ if __name__ == "__main__":
         screen.blit(beats_add_text, [830, HEIGHT-140])
         screen.blit(beats_sub_text, [830, HEIGHT-90])
 
+        # instrument on/off controls
+        instrument_rects = []
+        for i in range(instruments):
+            i_rect = pygame.rect.Rect((0, i*100), (200, 100))
+            instrument_rects.append(i_rect)
+
         # modify text if playing
         if is_playing:
             play_text_2 = medium_font.render("Playing", True, dark_gray)
@@ -174,7 +188,7 @@ if __name__ == "__main__":
 
         # play notes
         if beat_changed:
-            play_notes(clicked)
+            play_notes(clicked, active_list)
 
         # get events from the queue (USER INPUTS)
         for event in pygame.event.get():
@@ -193,7 +207,7 @@ if __name__ == "__main__":
                         # Updated clicked list
                         clicked[coords[1]][coords[0]] = not clicked[coords[1]][coords[0]]
 
-            # check if play/pause or bpm button was clicked - update it
+            # check if play/pause or number of bpm button was clicked - update it
             if event.type == pygame.MOUSEBUTTONUP:
                 if play_pause.collidepoint(event.pos):
                     is_playing = not is_playing
@@ -209,6 +223,11 @@ if __name__ == "__main__":
                     beats = max(1, beats - 1)
                     for i in range(len(clicked)):
                         clicked[i].pop(-1) # remove last beat from table
+
+                # check for instrument on/off command
+                for i, i_rect in enumerate(instrument_rects):
+                    if i_rect.collidepoint(event.pos):
+                        active_list[i] = not active_list[i]
 
         # BEAT TRACKING
         # Create beat length (i.e. how long each beat should play for) (minutes)
