@@ -99,12 +99,53 @@ def draw_save_menu(beat_name: str,
 
     return entry_btn, save_btn, exit_btn
 
-def draw_load_menu():
+def draw_load_menu(idx: int):
     pygame.draw.rect(screen, black, rect=[0, 0, WIDTH, HEIGHT], width=0, border_radius=5)
+    menu_text = label_font.render("LOAD MENU: Select beat to load", True, white)
+    screen.blit(menu_text, (400, 40))
+
+    # load button
+    load_btn = pygame.draw.rect(screen, gray, rect=[WIDTH//2 - 200, int(HEIGHT*0.87), 400, 100], width=0, border_radius=5)
+    load_text = label_font.render("Load beat", True, white)
+    screen.blit(load_text, (WIDTH//2 - 75, int(HEIGHT*0.87) + 30))
+
+    # delete btn
+    delete_btn = pygame.draw.rect(screen, gray, rect=[WIDTH//2 - 500, int(HEIGHT*0.87), 200, 100], width=0, border_radius=5)
+    delete_text = label_font.render("Delete beat", True, white)
+    screen.blit(delete_text, (WIDTH//2 - 490, int(HEIGHT*0.87) + 25))
+
+    # show all saved beats (only display 10)
+    saved_beats_menu = pygame.draw.rect(screen, gray, rect=[190, 90, 1000, 600], width=5, border_radius=5)
+    for b in range(len(saved_beats)):
+        if b < 10:
+            beat_clicked = []
+            # Row text
+            row_text = medium_font.render(f"{b+1}", True, white)
+            screen.blit(row_text, (200, 100 + b*50))
+
+            # beat name
+            name_start_idx = saved_beats[b].index("name: ") + 6
+            name_end_idx = saved_beats[b].index("beats: ") - 2
+            b_name = saved_beats[b][name_start_idx:name_end_idx]
+            name_text = medium_font.render(f"{b_name}", True, white)
+            screen.blit(name_text, (240, 100 + b*50))
+
+        # if beat is selected, display more info
+        if 0 <= idx < len(saved_beats) and (b == idx):
+            # num_beats
+            num_beats_idx_end = saved_beats[b].index("bpm: ") - 2
+            b_beats = int(saved_beats[b][name_end_idx+9:num_beats_idx_end])
+
+            # bpm
+            bpm_idx_end = saved_beats[b].index("selected: ") - 2
+            b_bpm = int(saved_beats[b][num_beats_idx_end+7:bpm_idx_end])
+
+            # todo: parse out the selected beats
     exit_btn = pygame.draw.rect(screen, gray, rect=[WIDTH-200, HEIGHT-100, 180, 90], width=0, border_radius=5)
     exit_text = label_font.render("Close", True, white)
     screen.blit(exit_text, (WIDTH-160, HEIGHT-70))
-    return exit_btn
+
+    return load_btn, delete_btn, saved_beats_menu, exit_btn
 
 def play_notes(clicked: list,
     active_list: list):
@@ -249,7 +290,7 @@ if __name__ == "__main__":
         if save_menu:
             entry_button, save_button, exit_button = draw_save_menu(beat_name, is_typing)
         if load_menu:
-            exit_button = draw_load_menu()
+            load_button, delete_button, saved_beats_menu, exit_button = draw_load_menu()
 
         # play notes
         if beat_changed:
